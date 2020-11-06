@@ -4,22 +4,16 @@ const targetNode = document.querySelector('.e-cmp-content');
 const config = { attributes: true, childList: true, subtree: true };
 var bThrobbed = false;
 
-var html = '<audio controls autoplay="true" src="okay.mp3" id = "okayPlay"><source src="okay.mp3" type="audio/mpeg"> </audio>';
+var playerHTML = '<audio controls autoplay="true" src="okay.mp3" id = "okayPlay"><source src="okay.mp3" type="audio/mpeg"> </audio>';
 var dv = document.createElement("div");
-dv.innerHTML=html;
+dv.innerHTML=playerHTML;
 setTimeout(function() {
-document.body.prepend(dv);
+  document.body.prepend(dv);
 },500);
-function throb(count) {
-  var p = document.getElementById("okayPlay");
-  p.src = chrome.extension.getURL("okay.mp3")
-  var d = document.querySelector('#site-content');
-  var c = document.querySelector('#results-president');
-  var r = document.querySelector("[data-race='PA-G-P-2020-11-03']");
+
+function checkRace(raceSelector) {
+  var r = document.querySelector(raceSelector);
   var data = JSON.parse(r.getAttribute('data-candidates'));
-  var html="<div style='padding:20px;'><div style='color:black;'>PA:";
-  
-  var bokay = true;
   var biden = 0;
   var trump = 0;
   for(var i in data) {
@@ -30,63 +24,89 @@ function throb(count) {
     else if (can.last_name.toLowerCase() == 'trump') {
       trump=parseInt(can.votes);
     }
-    html+="<div style='color:black;'>"+can.last_name+": "+can.votes+"</div>";
   }
-  html+="</div>"
-  if (biden<trump) {
-    bokay = false;
-  }
-  r = document.querySelector("[data-race='GA-G-P-2020-11-03']");
-  data = JSON.parse(r.getAttribute('data-candidates'));
-  html+="<div style='color:black;'>GA:";
-  biden = 0; 
-  trump = 0;
-  for(var i in data) {
-    var can = data[i];
-    if (can.last_name.toLowerCase() == 'biden') {
-      biden=parseInt(can.votes);
+  return {"biden":biden, "trump":trump}
+}
+
+function monitorElection() {
+  var races = ["PA","GA","NV","AZ"];
+  var bOkay = true;
+  var returnData = [];
+  var html = "<div style='padding:20px;'>";
+  for (var i in races) {
+    var race = "[data-race='"+races[i]+"-G-P-2020-11-03']";
+    var state = races[i];
+    var data = checkRace(race);
+    returnData.push(data);
+    var goodRace = data["biden"]>data["trump"];
+    if (!goodRace) {
+      bOkay = false;
     }
-    else if (can.last_name.toLowerCase() == 'trump') {
-      trump=parseInt(can.votes);
-    }
-    html+="<div style='color:black;'>"+can.last_name+": "+can.votes+"</div>";
+    var sbColor="blue";
+    if (goodRace) sbColor="blue";
+    else sbColor="red";
+    html+="<div style='margin-top:10px;color:"+sbColor+";'>"+state+":"
+    html+="<div style='color:"+sbColor+";'>Biden: "+data["biden"]+"</div>";
+    html+="<div style='color:"+sbColor+";'>Trump: "+data["trump"]+"</div>";
+    html+="</div>";
   }
-  html+="</div></div>";
-  if (biden<trump) {
-    bokay = false;
-  }
-  if (bokay) {
-  document.getElementById("scoreboard").style.color="blue";
-    p.play();
-  }
+  html+="</div>";
   var d = document.querySelector('.e-nav-container');
   if (!d || typeof d=='undefined') {
     document.body.prepend(document.getElementById("scoreboard"));
   }
-  else 
-    d.appendChild(document.getElementById("scoreboard"));
+  else d.appendChild(document.getElementById("scoreboard"));
   document.getElementById("scoreboard").innerHTML=html;
+  var p = document.getElementById("okayPlay");
+  if (bOkay) {
+    p.src = chrome.extension.getURL("okay.mp3");
+    p.play();
+  }
+  flashScreen(0);
+}
 
-  var d = document.querySelector('#site-content');
+function flashScreen(count) {
+   var width= window.innerWidth || document.body.clientWidth;
+   var height= window.innerHeight || document.body.clientHeight
+  var fs = document.getElementById("flashScreen");
+  fs.style.minWidth = width+"px";
+  fs.style.width = width+"px";
+  fs.style.minHeight = height+"px";
+  fs.style.height = height+"px";
+  fs.style.opacity = ".8";
+  fs.style.backgroundColor="blue";
+  fs.style.position="absolute";
+  fs.style.top="0px";
+  fs.style.left="0px";
+  fs.style.zIndex = "4000";
+
+  //var d = document.querySelector('#site-content');
   if (count % 2==0) {
-    d.style.backgroundColor="blue";
-    c.style.display="none";
+    fs.style.display="block";
+    //c.style.display="none";
   }
   else {
-    d.style.backgroundColor="white";
-    c.style.display="block";
+    fs.style.display="none";
+   // c.style.display="block";
 
   }
   count++;
   if (count<=5) {
     setTimeout(function() {
-      throb(count);
+      flashScreen(count);
     },50);
   }
 }
 var bCollapsed = false;
+
 setTimeout(function() {
-  var d = document.createElement("div")
+  var d = document.createElement("div");
+  d.id = "flashScreen";
+  d.setAttribute("id","flashScreen");
+  document.body.appendChild(d);
+  d.style.display="none";
+  
+  d = document.createElement("div")
   d.id = "scoreboard";
   d.setAttribute("id","scoreboard");
   d.style.padding="20px;"
@@ -96,9 +116,9 @@ setTimeout(function() {
   d.style.cursor="pointer";
   d.style.top="0px";
   d.style.width="200px";
-  d.style.height="200px";
+  d.style.height="280px";
   d.style.backgroundColor="white";
-  d.style.opacity="0.8";
+  d.style.opacity = "1.0"
   d.style.zIndex="20000";
   var n = document.querySelector('.e-nav-container');
   if (!n || typeof n=='undefined') {
@@ -108,11 +128,11 @@ setTimeout(function() {
     n.appendChild(d);
   d.addEventListener("click",function() {
     if (!bCollapsed) {
-      d.style.height="50px";
-      d.style.fontSize = "8px"
+      d.style.height="20px";
+      d.style.fontSize = "1px"
     }
     else {
-      d.style.height="200px";
+      d.style.height="280px";
       d.style.fontSize = "20px"
     }
     bCollapsed = !bCollapsed;
@@ -126,7 +146,7 @@ const callback = function(mutationsList, observer) {
               console.log(document.querySelector('.e-all-text').innerText);
               setTimeout(function() {bThrobbed=false;},2000);
               setTimeout(function() {
-                throb(0);
+                monitorElection();
               },50);
             }
         }
