@@ -116,7 +116,7 @@ setTimeout(function() {
   d.style.cursor="pointer";
   d.style.top="0px";
   d.style.width="200px";
-  d.style.height="280px";
+  d.style.height="320px";
   d.style.backgroundColor="white";
   d.style.opacity = "1.0"
   d.style.zIndex="20000";
@@ -132,7 +132,7 @@ setTimeout(function() {
       d.style.fontSize = "1px"
     }
     else {
-      d.style.height="280px";
+      d.style.height="320px";
       d.style.fontSize = "20px"
     }
     bCollapsed = !bCollapsed;
