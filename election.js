@@ -62,6 +62,10 @@ function monitorElection() {
     p.src = chrome.extension.getURL("okay.mp3");
     p.play();
   }
+  else {
+    p.src = chrome.extension.getURL("not_okay.mp3");
+    p.play();
+  }
   flashScreen(0);
 }
 
