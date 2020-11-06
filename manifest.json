@@ -1,0 +1,16 @@
+{
+    "name": "2020 Election Monitor",
+    "version": "1.0",
+    "description": "Monitors the election - so you don't have to!",
+    "permissions": ["activeTab"],
+    "content_scripts": [{
+     "matches": ["https://www.nytimes.com/*"],
+     "run_at": "document_end",
+      "js": ["election.js"],
+      "persistent": false
+    }],
+    "manifest_version": 2,
+    "web_accessible_resources": [
+      "*.mp3"
+    ]
+  }
